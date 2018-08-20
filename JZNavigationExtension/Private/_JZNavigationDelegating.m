@@ -52,6 +52,16 @@
             navigationController.navigationBar.barTintColor = [viewController jz_navigationBarTintColorWithNavigationController:navigationController];
             navigationController.jz_navigationBarBackgroundAlphaReal = [viewController jz_navigationBarBackgroundAlphaWithNavigationController:navigationController];
         };
+        
+        // handle cancel status
+        [transitionCoordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+            
+            if (context.isCancelled) {
+                UIViewController *adjustViewController = context.isCancelled ? navigationController.jz_previousVisibleViewController : viewController;
+                navigationController.navigationBar.barTintColor = [adjustViewController jz_navigationBarTintColorWithNavigationController:navigationController];
+                navigationController.jz_navigationBarBackgroundAlphaReal = [adjustViewController jz_navigationBarBackgroundAlphaWithNavigationController:navigationController];
+            }
+        }];
 
     } else if (navigationController.jz_navigationBarTransitionStyle == JZNavigationBarTransitionStyleDoppelganger) {
         

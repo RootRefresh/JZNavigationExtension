@@ -55,8 +55,11 @@ __attribute__((constructor)) static void JZ_Inject(void) {
 }
 
 - (void)jz_viewDidLoad {
-    NSAssert(!self.delegate, @"Set delegate should be invoked when viewDidLoad");
-    self.delegate = nil;
+    
+    if (!self.delegate) {
+        self.delegate = self.jz_navigationDelegate;
+    }
+    
     [self.interactivePopGestureRecognizer setValue:@NO forKey:@"canPanVertically"];
     self.interactivePopGestureRecognizer.delegate = self.jz_navigationDelegate;
     [self jz_viewDidLoad];
@@ -64,38 +67,15 @@ __attribute__((constructor)) static void JZ_Inject(void) {
 
 - (void)jz_setDelegate:(NSObject <UINavigationControllerDelegate> *)delegate {
     
-    if ([self.delegate isEqual:delegate]) {
+    if ([self.delegate isEqual:delegate] || delegate == self.jz_navigationDelegate) {
+        [self jz_setDelegate:delegate];
         return;
     }
     
-    static NSString *_JZNavigationDelegatingTrigger = @"_JZNavigationDelegatingTrigger";
-    
-    if (![self.delegate isEqual:self.jz_navigationDelegate]) {
-        objc_setAssociatedObject(self.delegate, _cmd, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        @try { [(NSObject *)self.delegate removeObserver:self.delegate forKeyPath:_JZNavigationDelegatingTrigger context:_cmd]; }
-        @catch (NSException *exception) {
-        }
-    }
-    
     if (!delegate) {
-        
         delegate = self.jz_navigationDelegate;
-        
     } else {
-        
-        NSAssert([delegate isKindOfClass:[NSObject class]], @"Must inherit form NSObject!");
-        
-        [delegate addObserver:delegate forKeyPath:_JZNavigationDelegatingTrigger options:NSKeyValueObservingOptionNew context:_cmd];
-        
-        __unsafe_unretained typeof(delegate) unretained_delegate = delegate;
-        objc_setAssociatedObject(delegate, _cmd, [[_JZNavigationDelegating alloc] initWithActionsPerformInDealloc:^{
-            @try { [unretained_delegate removeObserver:unretained_delegate forKeyPath:_JZNavigationDelegatingTrigger context:_cmd]; }
-            @catch (NSException *exception) {
-            }
-        }], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        
         void (^jz_add_replace_method)(id, SEL, IMP) = ^(id object, SEL sel, IMP imp) {
-
             Method method = class_getInstanceMethod([_JZNavigationDelegating class], sel);
             const char *types = method_getTypeEncoding(method);
             class_addMethod([object class], sel, imp, types);
@@ -108,7 +88,6 @@ __attribute__((constructor)) static void JZ_Inject(void) {
     }
     
     [self jz_setDelegate:delegate];
-    
 }
 
 #pragma mark - public

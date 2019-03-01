@@ -184,13 +184,6 @@
         navigationController.jz_previousVisibleViewController = nil;
         
     }];
-    
-    if (![navigationController.delegate isEqual:navigationController.jz_navigationDelegate]) {
-        Class superClass = class_getSuperclass(object_getClass(self));
-        void (*superIMP)(id _Nonnull, SEL _Nonnull, UINavigationController *, UIViewController *, BOOL) = (void *)class_getMethodImplementation(superClass, _cmd);
-        superIMP(self, _cmd, navigationController, viewController, animated);
-    }
-    
 }
 
 #pragma mark - gestureRecognizerDelegate
